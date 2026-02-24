@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="CPK_Calculate.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:CPK_Calculate"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="CPK Calculation System">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop Kind="Base" />
+    </Window.SystemBackdrop>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TitleBar x:Name="AppTitleBar"
+                  Grid.Row="0"
+                  Title="CPK Calculation System"
+                  IsBackButtonVisible="False"
+                  IsPaneToggleButtonVisible="False">
+
+            <TitleBar.IconSource>
+                <ImageIconSource ImageSource="ms-appx:///Assets/Square44x44Logo.png" />
+            </TitleBar.IconSource>
+
+            <TitleBar.Content>
+                <AutoSuggestBox Width="360"
+                                VerticalAlignment="Center"
+                                PlaceholderText="Search controls and samples..."
+                                QueryIcon="Find" />
+            </TitleBar.Content>
+        </TitleBar>
+
+        <NavigationView x:Name="nvSample" 
+                        Grid.Row="1"
+                        IsBackButtonVisible="Collapsed" 
+                        PaneDisplayMode="Left"
+                        IsPaneOpen="False" 
+                        IsSettingsVisible="True"
+                        AlwaysShowHeader="False"
+                        ItemInvoked="NvSample_ItemInvoked"
+                        OpenPaneLength="220">
+
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Dashboard" Tag="DashBoardPage1">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Home" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItem Content="CPK Calculation" Tag="CPKPage">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="List" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItem Content="Excel Reports" Tag="SamplePage3">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Library" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <Frame x:Name="contentFrame" Padding="24" />
+        </NavigationView>
+
+    </Grid>
+</Window>

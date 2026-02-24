@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "CPK Calculate (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "CPK Calculate (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
