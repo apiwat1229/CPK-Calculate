@@ -66,6 +66,12 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
+                <NavigationViewItem Content="Import Data" Tag="ImportDataPage">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE159;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
                 <NavigationViewItem Content="Analysis History" Tag="HistoryPage">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE81C;"/>
