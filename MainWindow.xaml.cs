@@ -90,6 +90,7 @@ namespace CPK_Calculate
                 "DashBoardPage" => typeof(DashBoardPage),
                 "CPKPage" => typeof(CPKPage),
                 "RecordCPK" => typeof(RecordCPK),
+                "HistoryPage" => typeof(HistoryPage),
                 "SettingPage" => typeof(SettingPage),
                 _ => null
             };

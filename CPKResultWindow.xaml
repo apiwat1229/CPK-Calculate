@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="CPK_Calculate.CPKResultWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="CPK Analysis Result">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+            <StackPanel Spacing="20">
+
+                <!-- CPK Statistics Card -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="24,20">
+                    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="16">
+                        <!-- Header -->
+                        <Grid Grid.Row="0">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE9D9;" FontSize="16" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                                <TextBlock Text="CPK STATISTICS" FontWeight="Bold" FontSize="14"/>
+                            </StackPanel>
+                            <Border HorizontalAlignment="Right" Background="#FFF0E6" CornerRadius="4" Padding="12,4">
+                                <TextBlock x:Name="StatDateBadge" Text="" FontSize="12" FontWeight="SemiBold" Foreground="#E67E22"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Gauge Bars -->
+                        <Grid Grid.Row="1" ColumnDefinitions="*,2*,*" ColumnSpacing="24">
+                            <!-- Within (Left) -->
+                            <StackPanel Grid.Column="0" Spacing="10">
+                                <TextBlock Text="WITHIN" FontWeight="Bold" FontSize="13" Foreground="#1ABC9C"/>
+                                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="12">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="StDev" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="WithinStDev" Text="-" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Cp" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="WithinCp" Text="-" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Cpk" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="WithinCpk" Text="-" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="PPM" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="WithinPPM" Text="-" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- Center Gauge -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="20">
+                                <!-- Within CPK bar -->
+                                <StackPanel Spacing="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="WITHIN (CPK)" FontWeight="SemiBold" FontSize="12" Foreground="#1ABC9C"/>
+                                    </StackPanel>
+                                    <Grid Height="10" CornerRadius="5">
+                                        <Border Background="#E0F7F1" CornerRadius="5"/>
+                                        <Border x:Name="CpkBar" Background="#1ABC9C" CornerRadius="5" HorizontalAlignment="Left" Width="0"/>
+                                    </Grid>
+                                    <TextBlock x:Name="CpkBarValue" Text="" HorizontalAlignment="Right" FontWeight="Bold" FontSize="13" Foreground="#1ABC9C"/>
+                                </StackPanel>
+
+                                <!-- Overall PPK bar -->
+                                <StackPanel Spacing="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="OVERALL (PPK)" FontWeight="SemiBold" FontSize="12" Foreground="#E67E22"/>
+                                    </StackPanel>
+                                    <Grid Height="10" CornerRadius="5">
+                                        <Border Background="#FDEBD0" CornerRadius="5"/>
+                                        <Border x:Name="PpkBar" Background="#E67E22" CornerRadius="5" HorizontalAlignment="Left" Width="0"/>
+                                    </Grid>
+                                    <TextBlock x:Name="PpkBarValue" Text="" HorizontalAlignment="Right" FontWeight="Bold" FontSize="13" Foreground="#E67E22"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Overall (Right) -->
+                            <StackPanel Grid.Column="2" Spacing="10">
+                                <TextBlock Text="OVERALL" FontWeight="Bold" FontSize="13" Foreground="#E67E22" HorizontalAlignment="Right"/>
+                                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="12">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="StDev" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="OverallStDev" Text="-" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Pp" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="OverallPp" Text="-" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Ppk" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="OverallPpk" Text="-" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Cpm" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="OverallCpm" Text="-" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="PPM" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="1" x:Name="OverallPPM" Text="-" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Spec Info -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="24">
+                            <TextBlock x:Name="SpecInfo" Text="" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- CPK Histogram Card -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="24,20">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="CPK HISTOGRAM" FontWeight="Bold" FontSize="14"/>
+                            <StackPanel Orientation="Horizontal" Spacing="16" Margin="24,0,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <Ellipse Width="10" Height="10" Fill="#1ABC9C"/>
+                                    <TextBlock Text="Data" FontSize="11" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <Ellipse Width="10" Height="10" Fill="#E74C3C"/>
+                                    <TextBlock Text="Overall" FontSize="11" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <Ellipse Width="10" Height="10" Fill="#2C3E50"/>
+                                    <TextBlock Text="Within" FontSize="11" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                        <Canvas x:Name="HistogramCanvas" Height="280" HorizontalAlignment="Stretch"
+                                SizeChanged="HistogramCanvas_SizeChanged"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- X-bar Chart Card -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="24,20">
+                    <StackPanel Spacing="12">
+                        <Grid>
+                            <TextBlock Text="XBAR CHART" FontWeight="Bold" FontSize="14"/>
+                            <StackPanel Orientation="Horizontal" Spacing="20" HorizontalAlignment="Right">
+                                <TextBlock x:Name="XbarUCL" FontSize="12" FontWeight="Bold" Foreground="#E74C3C"/>
+                                <TextBlock x:Name="XbarCL" FontSize="12" FontWeight="Bold" Foreground="#1ABC9C"/>
+                                <TextBlock x:Name="XbarLCL" FontSize="12" FontWeight="Bold" Foreground="#E74C3C"/>
+                            </StackPanel>
+                        </Grid>
+                        <Canvas x:Name="XbarCanvas" Height="260" HorizontalAlignment="Stretch"
+                                SizeChanged="XbarCanvas_SizeChanged"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
