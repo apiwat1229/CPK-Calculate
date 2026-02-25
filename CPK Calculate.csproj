@@ -69,6 +69,11 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260209005" />
   </ItemGroup>
   <ItemGroup>
+    <Page Update="ExcelDataEntryPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
     <Page Update="CPKPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -84,12 +89,12 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="SamplePage2.xaml">
+    <Page Update="RecordCPK.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="DashBoardPage1.xaml">
+    <Page Update="DashBoardPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

@@ -48,7 +48,7 @@
                         OpenPaneLength="220">
 
             <NavigationView.MenuItems>
-                <NavigationViewItem Content="Dashboard" Tag="DashBoardPage1">
+                <NavigationViewItem Content="Dashboard" Tag="DashBoardPage">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Home" />
                     </NavigationViewItem.Icon>
@@ -60,7 +60,7 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItem Content="Excel Reports" Tag="SamplePage3">
+                <NavigationViewItem Content="Excel Reports" Tag="RecordCPK">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Library" />
                     </NavigationViewItem.Icon>

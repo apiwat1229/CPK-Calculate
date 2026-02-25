@@ -7,11 +7,12 @@ using System.Linq;
 
 namespace CPK_Calculate
 {
+    // ชื่อคลาสต้องเป็น CPKPage และต้องมี partial เพื่อเชื่อมกับ XAML
     public sealed partial class CPKPage : Page
     {
         public CPKPage()
         {
-            this.InitializeComponent();
+            this.InitializeComponent(); // ถ้าชื่อคลาสตรงกัน Error นี้จะหายไปเอง
         }
 
         private void DataInputBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -40,37 +41,40 @@ namespace CPK_Calculate
             try
             {
                 var numbers = GetNumbersFromInput();
-                if (numbers.Count < 2) return;
+                if (numbers.Count < 2)
+                {
+                    ShowError("Please input at least 2 numbers.");
+                    return;
+                }
 
-                // ดึงค่าจาก UI
+                // เรียกใช้ Engine (ต้องมั่นใจว่ามีคลาส CPKEngine อยู่ในโปรเจกต์)
                 var res = CPKEngine.Calculate(numbers, LSLInput.Value, USLInput.Value, (int)SizeInput.Value);
 
-                // อัปเดตฝั่ง WITHIN
+                // Update UI Within
                 StDevWTxt.Text = res.StdevWithin.ToString("F3");
                 CpTxt.Text = res.Cp.ToString("F2");
                 CpkTxt.Text = res.Cpk.ToString("F2");
                 PpmWTxt.Text = res.PpmWithin.ToString("F2");
-                BarCpk.Value = res.Cpk;
+                BarCpk.Value = Math.Min(res.Cpk, 2.0); // ป้องกัน Bar เกิน Max
                 BarCpkVal.Text = res.Cpk.ToString("F2");
 
-                // อัปเดตฝั่ง OVERALL
+                // Update UI Overall
                 StDevOTxt.Text = res.StdevOverall.ToString("F3");
                 PpTxt.Text = res.Pp.ToString("F2");
                 PpkTxt.Text = res.Ppk.ToString("F2");
                 CpmTxt.Text = res.Cpm.ToString("F2");
                 PpmOTxt.Text = res.PpmOverall.ToString("F2");
-                BarPpk.Value = res.Ppk;
+                BarPpk.Value = Math.Min(res.Ppk, 2.0);
                 BarPpkVal.Text = res.Ppk.ToString("F2");
 
                 SummaryTxt.Text = $"Mean: {res.Mean:F3}";
 
-                // แปลผลคุณภาพ
                 UpdateInterpretation(res.Cpk, CpkStatusTxt, CpkStatusBorder);
                 UpdateInterpretation(res.Ppk, PpkStatusTxt, PpkStatusBorder);
             }
             catch (Exception ex)
             {
-                ShowError("เกิดข้อผิดพลาด: " + ex.Message);
+                ShowError("Error: " + ex.Message);
             }
         }
 
@@ -91,8 +95,7 @@ namespace CPK_Calculate
             else
             {
                 statusLabel.Text = val > 1.67 ? "EXCELLENT" : "SATISFACTORY";
-                var successBrush = (Brush)Application.Current.Resources["SystemFillColorSuccessBrush"];
-                statusLabel.Foreground = successBrush;
+                statusLabel.Foreground = new SolidColorBrush(Microsoft.UI.Colors.Green);
                 statusBorder.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(30, 0, 255, 0));
             }
         }
@@ -100,7 +103,13 @@ namespace CPK_Calculate
         private async void ShowError(string message)
         {
             if (this.XamlRoot == null) return;
-            ContentDialog dialog = new ContentDialog { Title = "แจ้งเตือน", Content = message, CloseButtonText = "ตกลง", XamlRoot = this.XamlRoot };
+            ContentDialog dialog = new ContentDialog
+            {
+                Title = "Notification",
+                Content = message,
+                CloseButtonText = "OK",
+                XamlRoot = this.XamlRoot
+            };
             await dialog.ShowAsync();
         }
     }

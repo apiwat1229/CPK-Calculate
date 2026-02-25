@@ -15,7 +15,7 @@
                 <TextBlock Text="Capability Analysis (CPK)" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="Bold"/>
             </StackPanel>
 
-            <Grid ColumnDefinitions="350, *" ColumnSpacing="24">
+            <Grid ColumnDefinitions="1*, 2*" ColumnSpacing="24">
                 <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" 
                         CornerRadius="8" Padding="16" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                     <StackPanel Spacing="16">
@@ -30,7 +30,7 @@
                         </Grid>
 
                         <TextBox x:Name="DataInputBox" Height="250" AcceptsReturn="True" 
-                                 PlaceholderText="วางชุดตัวเลขที่นี่..." TextChanged="DataInputBox_TextChanged"
+                                 PlaceholderText="Paste numbers here..." TextChanged="DataInputBox_TextChanged"
                                  FontSize="13" FontFamily="Consolas"/>
 
                         <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
@@ -117,7 +117,7 @@
                         </Grid>
                     </Border>
 
-                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" MinHeight="350" 
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" MinHeight="200" 
                             BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                         <TextBlock x:Name="SummaryTxt" Text="Mean: 0.00" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorDisabledBrush}"/>
                     </Border>
