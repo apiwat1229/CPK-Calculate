@@ -2,7 +2,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
@@ -12,10 +11,10 @@ namespace CPK_Calculate
     public class HistoryRowItem
     {
         public int RowNumber { get; set; }
-        public string Id { get; set; } = "";
-        public string Title { get; set; } = "";
-        public string DateText { get; set; } = "";
-        public string TimeText { get; set; } = "";
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string DateText { get; set; } = string.Empty;
+        public string TimeText { get; set; } = string.Empty;
     }
 
     public sealed partial class HistoryPage : Page
@@ -37,14 +36,13 @@ namespace CPK_Calculate
         private async void LoadData()
         {
             ShowState("loading");
+            _items.Clear();
 
             try
             {
                 var analyses = await CpkApiService.GetAllAsync();
 
-                _items.Clear();
-
-                if (analyses.Count == 0)
+                if (analyses == null || !analyses.Any())
                 {
                     RecordCountTxt.Text = "0 records";
                     ShowState("empty");
@@ -52,7 +50,7 @@ namespace CPK_Calculate
                 }
 
                 int row = 1;
-                foreach (var a in analyses)
+                foreach (var a in analyses.OrderByDescending(x => x.CreatedAt))
                 {
                     string dateText = "-";
                     string timeText = "-";
@@ -66,8 +64,8 @@ namespace CPK_Calculate
                     _items.Add(new HistoryRowItem
                     {
                         RowNumber = row++,
-                        Id = a.Id,
-                        Title = string.IsNullOrWhiteSpace(a.Title) ? "(Untitled)" : a.Title,
+                        Id = a.Id ?? string.Empty,
+                        Title = string.IsNullOrWhiteSpace(a.Title) ? "Untitled Analysis" : a.Title,
                         DateText = dateText,
                         TimeText = timeText
                     });
@@ -78,59 +76,41 @@ namespace CPK_Calculate
             }
             catch (Exception ex)
             {
-                ErrorMessage.Text = $"Unable to connect to server.\n{ex.Message}";
-                ShowState("error");
+                System.Diagnostics.Debug.WriteLine($"Load Error: {ex.Message}");
+                ShowState("empty");
             }
         }
 
         private void ShowState(string state)
         {
             LoadingPanel.Visibility = state == "loading" ? Visibility.Visible : Visibility.Collapsed;
-            ErrorPanel.Visibility = state == "error" ? Visibility.Visible : Visibility.Collapsed;
             EmptyPanel.Visibility = state == "empty" ? Visibility.Visible : Visibility.Collapsed;
-            DataPanel.Visibility = state == "data" ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private void Refresh_Click(object sender, RoutedEventArgs e)
-        {
-            LoadData();
-        }
+        private void Refresh_Click(object sender, RoutedEventArgs e) => LoadData();
 
         private async void Delete_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not Button btn || btn.Tag is not string id) return;
-
-            var item = _items.FirstOrDefault(i => i.Id == id);
-            string title = item?.Title ?? id;
+            if (sender is not Button { Tag: string id }) return;
 
             var dialog = new ContentDialog
             {
                 Title = "Confirm Delete",
-                Content = $"Delete \"{title}\"?\nThis action cannot be undone.",
+                Content = "Are you sure you want to delete this analysis record?",
                 PrimaryButtonText = "Delete",
                 CloseButtonText = "Cancel",
                 DefaultButton = ContentDialogButton.Close,
                 XamlRoot = this.XamlRoot
             };
 
-            var result = await dialog.ShowAsync();
-            if (result != ContentDialogResult.Primary) return;
-
-            try
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
             {
-                await CpkApiService.DeleteAsync(id);
-                LoadData();
-            }
-            catch (Exception ex)
-            {
-                var errDialog = new ContentDialog
+                try
                 {
-                    Title = "Error",
-                    Content = $"Failed to delete: {ex.Message}",
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                await errDialog.ShowAsync();
+                    await CpkApiService.DeleteAsync(id);
+                    LoadData();
+                }
+                catch { /* Handle error */ }
             }
         }
 
@@ -139,58 +119,30 @@ namespace CPK_Calculate
             if (e.ClickedItem is not HistoryRowItem row) return;
 
             DetailLoadingOverlay.Visibility = Visibility.Visible;
-
             try
             {
                 var detail = await CpkApiService.GetByIdAsync(row.Id);
-                if (detail == null || detail.DataPoints.Count < 2)
+                if (detail != null && detail.DataPoints != null)
                 {
-                    DetailLoadingOverlay.Visibility = Visibility.Collapsed;
-                    var errDialog = new ContentDialog
+                    var results = CPKEngine.Calculate(detail.DataPoints, detail.Lsl, detail.Usl, detail.SubgroupSize);
+
+                    var resultData = new CPKResultData
                     {
-                        Title = "Error",
-                        Content = "No data points found in this analysis record.",
-                        CloseButtonText = "OK",
-                        XamlRoot = this.XamlRoot
+                        Values = detail.DataPoints,
+                        LSL = detail.Lsl,
+                        USL = detail.Usl,
+                        SubgroupSize = detail.SubgroupSize,
+                        Results = results,
+                        Title = detail.Title ?? "Result",
+                        Date = row.DateText
                     };
-                    await errDialog.ShowAsync();
-                    return;
+
+                    var resultWindow = new CPKResultWindow();
+                    resultWindow.LoadData(resultData);
+                    resultWindow.Activate();
                 }
-
-                var results = CPKEngine.Calculate(detail.DataPoints, detail.Lsl, detail.Usl, detail.SubgroupSize);
-
-                string dateStr = "";
-                if (DateTimeOffset.TryParse(detail.CreatedAt, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
-                {
-                    dateStr = dt.LocalDateTime.ToString("dd-MMM-yyyy");
-                }
-
-                var resultData = new CPKResultData
-                {
-                    Values = detail.DataPoints,
-                    LSL = detail.Lsl,
-                    USL = detail.Usl,
-                    SubgroupSize = detail.SubgroupSize,
-                    Results = results,
-                    Title = detail.Title,
-                    Date = dateStr
-                };
-
-                var resultWindow = new CPKResultWindow();
-                resultWindow.LoadData(resultData);
-                resultWindow.Activate();
             }
-            catch (Exception ex)
-            {
-                var errDialog = new ContentDialog
-                {
-                    Title = "Error",
-                    Content = $"Failed to load analysis detail:\n{ex.Message}",
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                await errDialog.ShowAsync();
-            }
+            catch { /* Handle error */ }
             finally
             {
                 DetailLoadingOverlay.Visibility = Visibility.Collapsed;

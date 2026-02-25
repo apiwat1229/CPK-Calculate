@@ -1,140 +1,52 @@
-using Microsoft.UI;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
-using Windows.Graphics;
 using Windows.UI;
 
 namespace CPK_Calculate
 {
-    public class PoDataRow
-    {
-        public int No { get; set; }
-        public string Ratio { get; set; } = "";
-        public string ProductionDate { get; set; } = "";
-        public string LotNo { get; set; } = "";
-        public string SampleNo { get; set; } = "";
-        public string Value { get; set; } = "";
-        public string Status { get; set; } = "";
-        public bool OutOfSpec { get; set; }
-        public SolidColorBrush StatusBrush => OutOfSpec
-            ? new SolidColorBrush(Windows.UI.Color.FromArgb(255, 231, 76, 60))
-            : new SolidColorBrush(Windows.UI.Color.FromArgb(255, 26, 188, 156));
-    }
-    public sealed partial class CPKResultWindow : Window
+    public sealed partial class CPKResultPage : Page
     {
         private CPKResultData? _data;
-        private Grid? _resultRoot;
-        private readonly ObservableCollection<PoDataRow> _dataRows = new();
 
-        public CPKResultWindow()
+        protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
         {
-            this.InitializeComponent();
-            this.AppWindow.Resize(new SizeInt32(1600, 900));
-            this.AppWindow.SetIcon("Assets/Square44x44Logo.scale-200.png");
-
-            if (this.Content is FrameworkElement rootElement)
+            base.OnNavigatedTo(e);
+            if (e.Parameter is CPKResultData data)
             {
-                if (rootElement.FindName("ResultTitleBar") is TitleBar resultTitleBar)
-                {
-                    this.ExtendsContentIntoTitleBar = true;
-                    this.SetTitleBar(resultTitleBar);
-                }
-
-                _resultRoot = rootElement.FindName("ResultRoot") as Grid;
+                LoadData(data);
             }
-            if (_resultRoot != null)
-            {
-                _resultRoot.ActualThemeChanged += (_, __) => UpdateResultTitleBarColors(_resultRoot.ActualTheme);
-                UpdateResultTitleBarColors(_resultRoot.ActualTheme);
-            }
-
-            if (MainWindow.Current != null)
-            {
-                MainWindow.Current.ThemeChanged += MainWindow_ThemeChanged;
-                this.Closed += (_, __) => MainWindow.Current.ThemeChanged -= MainWindow_ThemeChanged;
-                ApplyHostTheme(MainWindow.Current.CurrentTheme);
-            }
-
-            DataTableListView.ItemsSource = _dataRows;
         }
 
-        private static Brush GetThemeBrush(string key, Brush fallback)
+        public CPKResultPage()
         {
-            if (Application.Current?.Resources.ContainsKey(key) == true && Application.Current.Resources[key] is Brush b)
-                return b;
-            return fallback;
+            this.InitializeComponent();
         }
 
         public void LoadData(CPKResultData data)
         {
             _data = data;
-            if (Application.Current?.Resources.ContainsKey("AppTitle") == true &&
-                Application.Current.Resources["AppTitle"] is string titleText)
-            {
-                this.Title = titleText;
-            }
-            PopulateStatistics(data);
-            PopulateDataTable(data);
-        }
-
-        private void PopulateDataTable(CPKResultData data)
-        {
-            _dataRows.Clear();
-            for (int i = 0; i < data.Values.Count; i++)
-            {
-                double v = data.Values[i];
-                bool oos = v < data.LSL || v > data.USL;
-                _dataRows.Add(new PoDataRow
-                {
-                    No = i + 1,
-                    Value = v.ToString("F1"),
-                    Status = oos ? "OUT" : "OK",
-                    OutOfSpec = oos
-                });
-            }
-            DataTableInfoTxt.Text =
-                $"{data.Title}  ·  N={data.Values.Count}  ·  LSL={data.LSL:F2}  ·  USL={data.USL:F2}";
-        }
-
-        private void PopulateStatistics(CPKResultData data)
-        {
             var r = data.Results;
-
             StatDateBadge.Text = data.Date;
             SpecInfo.Text = $"N = {data.Values.Count}  |  Mean = {r.Mean:F3}  |  LSL = {data.LSL:F2}  |  USL = {data.USL:F2}";
-
-            // Within
             WithinStDev.Text = r.StdevWithin.ToString("F3");
             WithinCp.Text = r.Cp.ToString("F2");
             WithinCpk.Text = r.Cpk.ToString("F2");
             WithinPPM.Text = r.PpmWithin.ToString("F2");
-
-            // Overall
             OverallStDev.Text = r.StdevOverall.ToString("F3");
             OverallPp.Text = r.Pp.ToString("F2");
             OverallPpk.Text = r.Ppk.ToString("F2");
             OverallCpm.Text = r.Cpm.ToString("F2");
             OverallPPM.Text = r.PpmOverall.ToString("F2");
-
-            // Gauge bars (scale: max 2.0 = 100%)
             double cpkPct = Math.Clamp(r.Cpk / 2.0, 0, 1);
             double ppkPct = Math.Clamp(r.Ppk / 2.0, 0, 1);
-            CpkBarValue.Text = r.Cpk.ToString("F2");
-            PpkBarValue.Text = r.Ppk.ToString("F2");
-
-            // Will be set properly after layout
             CpkBar.Tag = cpkPct;
             PpkBar.Tag = ppkPct;
-
-            // Trigger bar width on loaded
             CpkBar.Loaded += (_, __) =>
             {
                 if (CpkBar.Parent is Grid g)
@@ -145,48 +57,55 @@ namespace CPK_Calculate
                 if (PpkBar.Parent is Grid g)
                     PpkBar.Width = g.ActualWidth * ppkPct;
             };
-
-            // X-bar labels
             double mean = r.Mean;
             double ucl = mean + 3 * r.StdevWithin;
             double lcl = mean - 3 * r.StdevWithin;
             XbarUCL.Text = $"UCL: {ucl:F3}";
             XbarCL.Text = $"CL: {mean:F3}";
             XbarLCL.Text = $"LCL: {lcl:F3}";
+            if (HistogramCanvas != null) DrawHistogram(HistogramCanvas, data);
+            if (XbarCanvas != null) DrawXbarChart(XbarCanvas, data);
         }
 
-        // ==================== HISTOGRAM ====================
+        private static Brush GetThemeBrush(string key, Brush fallback)
+        {
+            if (Application.Current?.Resources.ContainsKey(key) == true && Application.Current.Resources[key] is Brush b)
+                return b;
+            return fallback;
+        }
+
         private void HistogramCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (_data == null || _data.Values.Count < 2) return;
+            if (_data == null || HistogramCanvas == null) return;
             DrawHistogram(HistogramCanvas, _data);
         }
 
+        private void XbarCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (_data == null || XbarCanvas == null) return;
+            DrawXbarChart(XbarCanvas, _data);
+        }
+
+        // DrawHistogram and DrawXbarChart same as earlier functions, need to copy from window class.
         private static void DrawHistogram(Canvas canvas, CPKResultData data)
         {
             canvas.Children.Clear();
             double w = canvas.ActualWidth;
             double h = canvas.ActualHeight;
             if (w < 50 || h < 50) return;
-
             var values = data.Values;
             double mean = data.Results.Mean;
             double sdWithin = data.Results.StdevWithin;
             double sdOverall = data.Results.StdevOverall;
-
-            // Determine bins using Sturges' rule
             int binCount = Math.Max(5, (int)Math.Ceiling(1 + 3.322 * Math.Log10(values.Count)));
             double min = values.Min();
             double max = values.Max();
             double range = max - min;
             if (range == 0) range = 1;
-
-            // Extend range for curves
             double plotMin = mean - 4 * Math.Max(sdWithin, sdOverall);
             double plotMax = mean + 4 * Math.Max(sdWithin, sdOverall);
             plotMin = Math.Min(plotMin, min - range * 0.1);
             plotMax = Math.Max(plotMax, max + range * 0.1);
-
             double binWidth = range / binCount;
             var bins = new int[binCount];
             foreach (var v in values)
@@ -196,22 +115,12 @@ namespace CPK_Calculate
                 if (idx < 0) idx = 0;
                 bins[idx]++;
             }
-
             double maxBinCount = bins.Max();
             double leftMargin = 40;
             double bottomMargin = 30;
             double chartW = w - leftMargin - 10;
             double chartH = h - bottomMargin - 10;
             double barW = chartW / binCount;
-
-            // Scale factor: align normal curve peak with histogram peak
-            double normalPeakWithin = 1.0 / (sdWithin * Math.Sqrt(2 * Math.PI));
-            double normalPeakOverall = 1.0 / (sdOverall * Math.Sqrt(2 * Math.PI));
-            double normalPeak = Math.Max(normalPeakWithin, normalPeakOverall);
-            double histDensityMax = maxBinCount / (values.Count * binWidth);
-            double curveScale = (histDensityMax > 0 && normalPeak > 0) ? histDensityMax / normalPeak : 1;
-
-            // Draw Y-axis ticks
             for (int i = 0; i <= 4; i++)
             {
                 double yVal = maxBinCount * i / 4.0;
@@ -220,23 +129,22 @@ namespace CPK_Calculate
                 {
                     Text = ((int)yVal).ToString(),
                     FontSize = 10,
-                    Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255,128,128,128))
+                    Foreground = GetThemeBrush("TextFillColorSecondaryBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255, 128, 128, 128)))
                 };
                 Canvas.SetLeft(tick, 2);
                 Canvas.SetTop(tick, y - 7);
                 canvas.Children.Add(tick);
-
                 var line = new Line
                 {
-                    X1 = leftMargin, Y1 = y,
-                    X2 = leftMargin + chartW, Y2 = y,
-                    Stroke = GetThemeBrush("CpkGridLineBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(40, 128, 128, 128))),
+                    X1 = leftMargin,
+                    Y1 = y,
+                    X2 = leftMargin + chartW,
+                    Y2 = y,
+                    Stroke = GetThemeBrush("CpkGridLineBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(30, 128, 128, 128))),
                     StrokeThickness = 0.5
                 };
                 canvas.Children.Add(line);
             }
-
-            // Draw bars
             for (int i = 0; i < binCount; i++)
             {
                 double barH = maxBinCount > 0 ? (bins[i] / maxBinCount * chartH) : 0;
@@ -252,8 +160,6 @@ namespace CPK_Calculate
                 Canvas.SetTop(rect, 10 + chartH - barH);
                 canvas.Children.Add(rect);
             }
-
-            // Draw X-axis labels
             for (int i = 0; i <= binCount; i += Math.Max(1, binCount / 6))
             {
                 double val = min + i * binWidth;
@@ -261,21 +167,18 @@ namespace CPK_Calculate
                 {
                     Text = val.ToString("F1"),
                     FontSize = 10,
-                    Foreground = GetThemeBrush("TextFillColorSecondaryBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255,128,128,128)))
+                    Foreground = GetThemeBrush("TextFillColorSecondaryBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255, 128, 128, 128)))
                 };
                 Canvas.SetLeft(label, leftMargin + i * barW - 12);
                 Canvas.SetTop(label, 10 + chartH + 4);
                 canvas.Children.Add(label);
             }
-
-            // Draw normal curves
             DrawNormalCurve(canvas, mean, sdOverall, plotMin, plotMax, min, binWidth, binCount,
                 values.Count, maxBinCount, leftMargin, chartW, chartH,
-                GetThemeBrush("CpkOverallBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255, 231, 76, 60))) as SolidColorBrush, false); // Overall - red solid
-
+                GetThemeBrush("CpkOverallBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255, 231, 76, 60))) as SolidColorBrush, false);
             DrawNormalCurve(canvas, mean, sdWithin, plotMin, plotMax, min, binWidth, binCount,
                 values.Count, maxBinCount, leftMargin, chartW, chartH,
-                GetThemeBrush("CpkWithinCurveBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255, 44, 62, 80))) as SolidColorBrush, true); // Within - dark dashed
+                GetThemeBrush("CpkWithinCurveBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255, 44, 62, 80))) as SolidColorBrush, true);
         }
 
         private static void DrawNormalCurve(Canvas canvas, double mean, double sd,
@@ -284,51 +187,33 @@ namespace CPK_Calculate
             SolidColorBrush? colorBrush, bool isDashed)
         {
             if (sd <= 0) return;
-
             var points = new List<Windows.Foundation.Point>();
             int segments = 120;
-
-            // Normal curve in histogram-count scale
             double normalScale = totalCount * binWidth;
-
             for (int i = 0; i <= segments; i++)
             {
                 double x = dataMin + (binCount * binWidth) * i / segments;
                 double z = (x - mean) / sd;
                 double pdf = (1.0 / (sd * Math.Sqrt(2 * Math.PI))) * Math.Exp(-0.5 * z * z);
                 double yVal = pdf * normalScale;
-
                 double px = leftMargin + (x - dataMin) / (binCount * binWidth) * chartW;
                 double py = 10 + chartH - (maxBinCount > 0 ? yVal / maxBinCount * chartH : 0);
-
                 py = Math.Max(5, Math.Min(10 + chartH, py));
                 points.Add(new Windows.Foundation.Point(px, py));
             }
-
             if (points.Count < 2) return;
-
             var polyline = new Polyline
             {
                 Stroke = colorBrush ?? new SolidColorBrush(Windows.UI.Color.FromArgb(255, 44, 62, 80)),
                 StrokeThickness = 2
             };
-
             if (isDashed)
             {
                 polyline.StrokeDashArray = new DoubleCollection { 4, 3 };
             }
-
             foreach (var pt in points)
                 polyline.Points.Add(pt);
-
             canvas.Children.Add(polyline);
-        }
-
-        // ==================== X-BAR CHART ====================
-        private void XbarCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            if (_data == null || _data.Values.Count < 2) return;
-            DrawXbarChart(XbarCanvas, _data);
         }
 
         private static void DrawXbarChart(Canvas canvas, CPKResultData data)
@@ -337,14 +222,11 @@ namespace CPK_Calculate
             double w = canvas.ActualWidth;
             double h = canvas.ActualHeight;
             if (w < 50 || h < 50) return;
-
             var values = data.Values;
             double mean = data.Results.Mean;
             double sdWithin = data.Results.StdevWithin;
             double ucl = mean + 3 * sdWithin;
             double lcl = mean - 3 * sdWithin;
-
-            // Compute subgroup means for x-bar chart
             int subSize = Math.Max(1, data.SubgroupSize);
             var subgroupMeans = new List<double>();
             for (int i = 0; i < values.Count; i += subSize)
@@ -352,29 +234,23 @@ namespace CPK_Calculate
                 var group = values.Skip(i).Take(subSize).ToList();
                 subgroupMeans.Add(group.Average());
             }
-
             if (subgroupMeans.Count == 0) return;
-
             double dataMin = Math.Min(subgroupMeans.Min(), lcl);
             double dataMax = Math.Max(subgroupMeans.Max(), ucl);
             double range = dataMax - dataMin;
             if (range == 0) range = 1;
             double plotMin = dataMin - range * 0.15;
             double plotMax = dataMax + range * 0.15;
-
             double leftMargin = 50;
             double rightMargin = 10;
             double topMargin = 10;
             double bottomMargin = 30;
             double chartW = w - leftMargin - rightMargin;
             double chartH = h - topMargin - bottomMargin;
-
             double MapY(double val) => topMargin + chartH - ((val - plotMin) / (plotMax - plotMin) * chartH);
             double MapX(int idx) => leftMargin + (subgroupMeans.Count > 1
                 ? (double)idx / (subgroupMeans.Count - 1) * chartW
                 : chartW / 2);
-
-            // Y-axis labels
             int yTicks = 5;
             for (int i = 0; i <= yTicks; i++)
             {
@@ -389,54 +265,52 @@ namespace CPK_Calculate
                 Canvas.SetLeft(label, 2);
                 Canvas.SetTop(label, y - 7);
                 canvas.Children.Add(label);
-
                 var gridLine = new Line
                 {
-                    X1 = leftMargin, Y1 = y,
-                    X2 = leftMargin + chartW, Y2 = y,
+                    X1 = leftMargin,
+                    Y1 = y,
+                    X2 = leftMargin + chartW,
+                    Y2 = y,
                     Stroke = GetThemeBrush("CpkGridLineBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(30, 128, 128, 128))),
                     StrokeThickness = 0.5
                 };
                 canvas.Children.Add(gridLine);
             }
-
-            // UCL line (red)
             var uclLine = new Line
             {
-                X1 = leftMargin, Y1 = MapY(ucl),
-                X2 = leftMargin + chartW, Y2 = MapY(ucl),
+                X1 = leftMargin,
+                Y1 = MapY(ucl),
+                X2 = leftMargin + chartW,
+                Y2 = MapY(ucl),
                 Stroke = GetThemeBrush("CpkOverallBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255, 231, 76, 60))),
                 StrokeThickness = 1.5
             };
             canvas.Children.Add(uclLine);
-
-            // LCL line (red)
             var lclLine = new Line
             {
-                X1 = leftMargin, Y1 = MapY(lcl),
-                X2 = leftMargin + chartW, Y2 = MapY(lcl),
+                X1 = leftMargin,
+                Y1 = MapY(lcl),
+                X2 = leftMargin + chartW,
+                Y2 = MapY(lcl),
                 Stroke = GetThemeBrush("CpkOverallBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255, 231, 76, 60))),
                 StrokeThickness = 1.5
             };
             canvas.Children.Add(lclLine);
-
-            // CL line (green)
             var clLine = new Line
             {
-                X1 = leftMargin, Y1 = MapY(mean),
-                X2 = leftMargin + chartW, Y2 = MapY(mean),
+                X1 = leftMargin,
+                Y1 = MapY(mean),
+                X2 = leftMargin + chartW,
+                Y2 = MapY(mean),
                 Stroke = GetThemeBrush("CpkWithinBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255, 26, 188, 156))),
                 StrokeThickness = 1.5
             };
             canvas.Children.Add(clLine);
-
-            // Data polyline
             var polyline = new Polyline
             {
                 Stroke = GetThemeBrush("CpkWithinBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255, 26, 188, 156))),
                 StrokeThickness = 1.5
             };
-
             for (int i = 0; i < subgroupMeans.Count; i++)
             {
                 double px = MapX(i);
@@ -444,17 +318,15 @@ namespace CPK_Calculate
                 polyline.Points.Add(new Windows.Foundation.Point(px, py));
             }
             canvas.Children.Add(polyline);
-
-            // Data points (dots)
             for (int i = 0; i < subgroupMeans.Count; i++)
             {
                 double px = MapX(i);
                 double py = MapY(subgroupMeans[i]);
-
                 bool outOfControl = subgroupMeans[i] > ucl || subgroupMeans[i] < lcl;
                 var dot = new Ellipse
                 {
-                    Width = 6, Height = 6,
+                    Width = 6,
+                    Height = 6,
                     Fill = outOfControl
                         ? GetThemeBrush("CpkOverallBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255, 231, 76, 60)))
                         : GetThemeBrush("CpkWithinBrush", new SolidColorBrush(Windows.UI.Color.FromArgb(255, 26, 188, 156)))
@@ -463,8 +335,6 @@ namespace CPK_Calculate
                 Canvas.SetTop(dot, py - 3);
                 canvas.Children.Add(dot);
             }
-
-            // X-axis labels
             int labelStep = Math.Max(1, subgroupMeans.Count / 15);
             for (int i = 0; i < subgroupMeans.Count; i += labelStep)
             {
@@ -479,59 +349,6 @@ namespace CPK_Calculate
                 Canvas.SetTop(label, topMargin + chartH + 4);
                 canvas.Children.Add(label);
             }
-        }
-
-        private void UpdateResultTitleBarColors(ElementTheme theme)
-        {
-            if (!Microsoft.UI.Windowing.AppWindowTitleBar.IsCustomizationSupported())
-                return;
-
-            var titleBar = this.AppWindow.TitleBar;
-            bool isLight = theme == ElementTheme.Light;
-            if (theme == ElementTheme.Default && _resultRoot != null)
-            {
-                isLight = _resultRoot.ActualTheme == ElementTheme.Light;
-            }
-
-            if (isLight)
-            {
-                titleBar.ButtonForegroundColor = Microsoft.UI.Colors.Black;
-                titleBar.ButtonHoverForegroundColor = Microsoft.UI.Colors.Black;
-                titleBar.ButtonHoverBackgroundColor = Color.FromArgb(20, 0, 0, 0);
-                titleBar.ButtonPressedForegroundColor = Microsoft.UI.Colors.Black;
-                titleBar.ButtonPressedBackgroundColor = Color.FromArgb(40, 0, 0, 0);
-                titleBar.ButtonInactiveForegroundColor = Microsoft.UI.Colors.DarkGray;
-            }
-            else
-            {
-                titleBar.ButtonForegroundColor = Microsoft.UI.Colors.White;
-                titleBar.ButtonHoverForegroundColor = Microsoft.UI.Colors.White;
-                titleBar.ButtonHoverBackgroundColor = Color.FromArgb(20, 255, 255, 255);
-                titleBar.ButtonPressedForegroundColor = Microsoft.UI.Colors.White;
-                titleBar.ButtonPressedBackgroundColor = Color.FromArgb(40, 255, 255, 255);
-                titleBar.ButtonInactiveForegroundColor = Microsoft.UI.Colors.Gray;
-            }
-
-            titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
-            titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
-        }
-
-        private void ApplyHostTheme(ElementTheme theme)
-        {
-            if (_resultRoot != null)
-            {
-                _resultRoot.RequestedTheme = theme;
-                UpdateResultTitleBarColors(_resultRoot.ActualTheme);
-            }
-            else
-            {
-                UpdateResultTitleBarColors(theme);
-            }
-        }
-
-        private void MainWindow_ThemeChanged(ElementTheme theme)
-        {
-            ApplyHostTheme(theme);
         }
     }
 }

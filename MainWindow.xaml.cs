@@ -10,11 +10,19 @@ namespace CPK_Calculate
     public sealed partial class MainWindow : Window
     {
         public static new MainWindow? Current { get; private set; }
+        public ElementTheme CurrentTheme { get; private set; } = ElementTheme.Default;
+        public event Action<ElementTheme>? ThemeChanged;
 
         public MainWindow()
         {
             Current = this;
             this.InitializeComponent();
+
+            if (Application.Current?.Resources.ContainsKey("AppTitle") == true &&
+                Application.Current.Resources["AppTitle"] is string titleText)
+            {
+                this.Title = titleText;
+            }
 
             // Setup Custom TitleBar
             this.ExtendsContentIntoTitleBar = true;
@@ -129,11 +137,20 @@ namespace CPK_Calculate
                 rootElement.RequestedTheme = theme;
                 UpdateTitleBarColors(rootElement.ActualTheme);
             }
+
+            CurrentTheme = theme;
+            ThemeChanged?.Invoke(theme);
         }
 
         public void UpdateNavigationStyle(NavigationViewPaneDisplayMode mode)
         {
             nvSample.PaneDisplayMode = mode;
+        }
+
+        public void NavigateToResult(CPKResultData data)
+        {
+            if (contentFrame == null) return;
+            contentFrame.Navigate(typeof(CPKResultPage), data);
         }
 
         private void UpdateTitleBarColors(ElementTheme theme)

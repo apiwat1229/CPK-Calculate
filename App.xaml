@@ -10,6 +10,28 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
+            <!-- App-wide resources -->
+            <x:String x:Key="AppTitle">CPK Calculation System</x:String>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <x:String x:Key="AppTitle">CPK Calculation System</x:String>
+                    <SolidColorBrush x:Key="CpkWithinBrush" Color="#FF1ABC9C"/>
+                    <SolidColorBrush x:Key="CpkOverallBrush" Color="#FFE67E22"/>
+                    <SolidColorBrush x:Key="CpkWithinCurveBrush" Color="#FF2C3E50"/>
+                    <SolidColorBrush x:Key="CpkGridLineBrush" Color="#20808080"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <x:String x:Key="AppTitle">CPK Calculation System</x:String>
+                    <SolidColorBrush x:Key="CpkWithinBrush" Color="#FF1ABC9C"/>
+                    <SolidColorBrush x:Key="CpkOverallBrush" Color="#FFE67E22"/>
+                    <SolidColorBrush x:Key="CpkWithinCurveBrush" Color="#FFB0C4C8"/>
+                    <SolidColorBrush x:Key="CpkGridLineBrush" Color="#20808080"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Default">
+                    <x:String x:Key="AppTitle">CPK Calculation System</x:String>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
             <!-- Other app resources here -->
         </ResourceDictionary>
     </Application.Resources>

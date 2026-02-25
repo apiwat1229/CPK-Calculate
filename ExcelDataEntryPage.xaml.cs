@@ -182,12 +182,15 @@ namespace CPK_Calculate
             if (e.Key != VirtualKey.Enter) return;
             e.Handled = true;
 
-            if (sender == RatioCL)
-                RatioUSS.Focus(FocusState.Programmatic);
-            else if (sender == RatioUSS)
-                RatioBK.Focus(FocusState.Programmatic);
-            else if (sender == RatioBK)
-                LotNumberInput.Focus(FocusState.Programmatic);
+            if (sender is NumberBox nb2)
+            {
+                if (nb2 == RatioCL)
+                    RatioUSS.Focus(FocusState.Programmatic);
+                else if (nb2 == RatioUSS)
+                    RatioBK.Focus(FocusState.Programmatic);
+                else if (nb2 == RatioBK)
+                    LotNumberInput.Focus(FocusState.Programmatic);
+            }
         }
 
         private int GetRatioTotal()
@@ -320,9 +323,7 @@ namespace CPK_Calculate
                 Date = _parameters?.Date?.ToString("dd-MMM-yyyy") ?? ""
             };
 
-            var resultWindow = new CPKResultWindow();
-            resultWindow.LoadData(data);
-            resultWindow.Activate();
+            MainWindow.Current?.NavigateToResult(data);
         }
 
         private void UpdateCount()

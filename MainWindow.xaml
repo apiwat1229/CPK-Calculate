@@ -21,7 +21,7 @@
 
         <TitleBar x:Name="AppTitleBar"
                   Grid.Row="0"
-                  Title="CPK Calculation System"
+                  Title="{StaticResource AppTitle}"
                   IsBackButtonVisible="False"
                   IsPaneToggleButtonVisible="False">
 
